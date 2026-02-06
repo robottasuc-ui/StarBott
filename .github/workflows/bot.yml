@@ -1,6 +1,5 @@
 name: Triple Bot 24/7
 
-# ДОБАВЬ ЭТОТ БЛОК:
 concurrency:
   group: bot-session
   cancel-in-progress: true
@@ -26,11 +25,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install aiogram requests supabase  # ДОБАВИЛИ supabase сюда
+          pip install aiogram requests supabase-py
 
       - name: Run All Bots
         run: |
-          # ПРОВЕРЬ: файлы должны быть РАЗНЫЕ. 
-          # Не запускай один и тот же токен в разных файлах!
-          python main.py & 
-          python auth.py 
+          # Запускаем первого и второго в фоне
+          python auth.py &
+          python every.py &
+          # ТРЕТИЙ (ОСНОВНОЙ) ЗАПУСКАЕМ БЕЗ '&'
+          # Это заставит GitHub ждать его завершения
+          python main.py

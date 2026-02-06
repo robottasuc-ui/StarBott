@@ -1,2 +1,5 @@
 aiogram
 requests
+supabase==2.3.4
+postgrest==0.16.2
+httpx==0.26.0

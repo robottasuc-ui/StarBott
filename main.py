@@ -2,11 +2,11 @@ import os
 import asyncio
 import requests
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command, CommandObject
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.types import WebAppInfo
+from aiogram.filters import Command
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+from aiogram.types import WebAppInfo, ReplyKeyboardMarkup, KeyboardButton
 
-# --- ТВОИ ДАННЫЕ (НЕ УДАЛЕНО) ---
+# --- КОНФИГУРАЦИЯ ---
 TOKEN = "8451029637:AAHF6jJdQ98QhYRRsJxH_wuktMeE5QctT-I"
 SB_URL = "https://mwsbkpfarhdankpyifbm.supabase.co"
 SB_KEY = "sb_publishable_Bj40x3HKomgXSyLMiVqXig_FqCgOSmA"
@@ -25,46 +25,64 @@ WELCOME_PHOTO_URL = "https://i.postimg.cc/G3S5cMJS/logo.jpg"
 WEB_APP_URL = "https://stars-drop.vercel.app"
 SITE_URL = "https://stars-drop-site.vercel.app/"
 
-# --- ТВОЯ ЛОГИКА (НЕ УДАЛЕНО) ---
+# --- ЛОГИКА ПРИВЕТСТВИЯ ---
 @dp.message(Command("start"))
-async def start_handler(message: types.Message, command: CommandObject):
+async def start_handler(message: types.Message):
     user_id = message.from_user.id
     username = message.from_user.username or "Gamer"
-    args = command.args
 
-    if args and args.startswith("auth_"):
-        try:
-            res = requests.patch(f"{SB_URL}/rest/v1/users?user_id=eq.{user_id}", 
-                                 headers=headers, json={"auth_status": "verified"})
-            await message.answer("✅ Авторизация успешна!")
-        except: pass
-        return
-
+    # Регистрация пользователя в базе
     try:
-        check_user = requests.get(f"{SB_URL}/rest/v1/users?user_id=eq.{user_id}", headers=headers).json()
-        if not check_user:
-            new_user = {"user_id": user_id, "username": username, "stars": 0, "balance": 0.0, "inventory": [], "tickets": 0}
+        check_res = requests.get(f"{SB_URL}/rest/v1/users?user_id=eq.{user_id}", headers=headers)
+        if check_res.status_code == 200 and not check_res.json():
+            new_user = {
+                "user_id": user_id, 
+                "username": username, 
+                "stars": 0, 
+                "balance": 0.0, 
+                "inventory": [], 
+                "tickets": 0
+            }
             requests.post(f"{SB_URL}/rest/v1/users", headers=headers, json=new_user)
-    except: pass
+    except Exception as e:
+        print(f"Ошибка базы: {e}")
 
-    builder = InlineKeyboardBuilder()
-    builder.row(types.InlineKeyboardButton(text="🚀 Запустить StarDrop", web_app=WebAppInfo(url=WEB_APP_URL)))
-    builder.row(types.InlineKeyboardButton(text="🌐 Перейти на сайт", url=SITE_URL))
+    # 1. Кнопка ПОД картинкой (только ссылка на сайт)
+    inline_builder = InlineKeyboardBuilder()
+    inline_builder.row(types.InlineKeyboardButton(text="🌐 Перейти на сайт", url=SITE_URL))
     
-    await message.answer_photo(photo=WELCOME_PHOTO_URL, caption=f"👋 Привет, {username}!", reply_markup=builder.as_markup())
+    # 2. Большая кнопка СНИЗУ (Menu Button / Reply Keyboard)
+    reply_builder = ReplyKeyboardBuilder()
+    reply_builder.row(types.KeyboardButton(
+        text="🎮 Играть", 
+        web_app=WebAppInfo(url=WEB_APP_URL)
+    ))
 
-# --- ФИКС ДЛЯ РАБОТЫ 24/7 ЧЕРЕЗ GITHUB ACTIONS ---
+    # Отправка сообщения
+    await message.answer_photo(
+        photo=WELCOME_PHOTO_URL, 
+        caption=(
+            f"👋 Привет, {username}!\n\n"
+            "Добро пожаловать на **StarsDrop**.\n\n"
+            "📍 Выбирай удобный способ игры:\n"
+            "— Переходи на наш полноценный **сайт** по кнопке ниже.\n"
+            "— Или нажимай синюю кнопку **«Играть»** в меню бота!"
+        ),
+        parse_mode="Markdown",
+        reply_markup=inline_builder.as_markup()
+    )
+    
+    # Отправляем клавиатуру с нижней кнопкой отдельным сообщением (или обновляем интерфейс)
+    await message.answer("Удачи в игре! 👇", reply_markup=reply_builder.as_markup(resize_keyboard=True))
+
+# --- СИСТЕМА 24/7 ---
 async def shutdown_timer():
-    """Таймер, который выключит бота через 5 часов 50 минут для мягкого перезапуска GitHub"""
     await asyncio.sleep(21000) 
-    print("Плановая перезагрузка сессии...")
     os._exit(0)
 
 async def main():
-    print("Бот запущен и готов к работе!")
-    # Запускаем фоновый таймер
+    print("Основной бот запущен!")
     asyncio.create_task(shutdown_timer())
-    
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

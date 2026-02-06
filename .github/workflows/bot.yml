@@ -1,4 +1,4 @@
-name: Triple Bot 24/7
+name: StarsDrop Bots 24/7
 
 concurrency:
   group: bot-session
@@ -25,13 +25,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install aiogram requests supabase-py
+          pip install aiogram requests
 
       - name: Run All Bots
         run: |
-          # Запускаем первого и второго в фоне
+          # Сначала запускаем вспомогательного бота в фоне
           python auth.py &
-          python every.py &
-          # ТРЕТИЙ (ОСНОВНОЙ) ЗАПУСКАЕМ БЕЗ '&'
-          # Это заставит GitHub ждать его завершения
+          # В конце запускаем основного бота БЕЗ амперсанда
           python main.py

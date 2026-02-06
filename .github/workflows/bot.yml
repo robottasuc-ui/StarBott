@@ -1,5 +1,10 @@
 name: Triple Bot 24/7
 
+# ДОБАВЬ ЭТОТ БЛОК:
+concurrency:
+  group: bot-session
+  cancel-in-progress: true
+
 on:
   schedule:
     - cron: '0 */6 * * *'

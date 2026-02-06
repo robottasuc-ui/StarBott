@@ -30,6 +30,4 @@ jobs:
       - name: Run All Bots
         run: |
           # Сначала запускаем вспомогательного бота в фоне
-          python auth.py &
-          # В конце запускаем основного бота БЕЗ амперсанда
-          python main.py
+          python auth.py

@@ -33,5 +33,4 @@ jobs:
           # ПРОВЕРЬ: файлы должны быть РАЗНЫЕ. 
           # Не запускай один и тот же токен в разных файлах!
           python main.py & 
-          python auth.py & 
-          python every.py &
+          python auth.py 

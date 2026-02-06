@@ -1,8 +1,8 @@
-name: Double Bot 24/7
+name: Triple Bot 24/7
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '0 */6 * * *' # Перезапуск каждые 6 часов
   workflow_dispatch:
   push:
     branches: [ main ]
@@ -22,9 +22,13 @@ jobs:
       - name: Install dependencies
         run: pip install aiogram requests
 
-      - name: Run Both Bots
+      - name: Run All Bots
         run: |
-          # Запускаем первого бота в фоновом режиме (&)
+          # 1. Запускаем основного бота в фоне
           python main.py & 
-          # Запускаем второго бота в обычном режиме
-          python auth.py
+          
+          # 2. Запускаем бота авторизации в фоне
+          python auth.py & 
+          
+          # 3. Запускаем нового бота every.py (без &, чтобы процесс не завершался)
+          python every.py
